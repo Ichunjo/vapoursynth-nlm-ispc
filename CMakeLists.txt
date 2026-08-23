@@ -90,12 +90,12 @@ find_package(Git QUIET)
 
 if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --tags --long --always
+    COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     OUTPUT_VARIABLE VCS_TAG
   )
   if(VCS_TAG)
-    string(STRIP ${VCS_TAG} VCS_TAG)
+    string(STRIP "${VCS_TAG}" VCS_TAG)
   endif()
 endif()
 
@@ -103,14 +103,23 @@ if(NOT VCS_TAG AND SKBUILD_PROJECT_VERSION)
   set(VCS_TAG "v${SKBUILD_PROJECT_VERSION}")
 endif()
 
-if(VCS_TAG)
-  message(STATUS "vs-nlm-ispc ${VCS_TAG}")
+if(VCS_TAG MATCHES "^v?([0-9]+)(\\.([0-9]+))?$")
+  set(PLUGIN_VERSION_MAJOR "${CMAKE_MATCH_1}")
+  if(CMAKE_MATCH_3)
+    set(PLUGIN_VERSION_MINOR "${CMAKE_MATCH_3}")
+  else()
+    set(PLUGIN_VERSION_MINOR 0)
+  endif()
 else()
-  message(WARNING "unknown plugin version")
-  set(VCS_TAG "unknown")
+  message(FATAL_ERROR "Unknown or unsupported plugin version '${VCS_TAG}'")
 endif()
 
-configure_file(source/config.h.in config.h)
+message(STATUS "vs-nlm-ispc version: ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR} (from '${VCS_TAG}')")
+
+target_compile_definitions(
+  vsnlm_ispc
+  PRIVATE PLUGIN_VERSION_MAJOR=${PLUGIN_VERSION_MAJOR} PLUGIN_VERSION_MINOR=${PLUGIN_VERSION_MINOR}
+)
 target_include_directories(vsnlm_ispc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 # 3. Installation into wheel structure

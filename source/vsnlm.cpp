@@ -1097,6 +1097,13 @@ static const VSFrame* VS_CC nlmGetFrame(
     } else {
         dst_frame = vsapi->newVideoFrame(&d->vi->format, d->vi->width, d->vi->height, src_frame, core);
     }
+
+    if (!dst_frame) {
+        vsapi->freeFrame(src_frame);
+        vsapi->setFilterError("failed to allocate destination frame", frameCtx);
+        return nullptr;
+    }
+
     std::array dstp{getPtrs(dst_frame, channels, vsapi)};
 
     nlmFinish(dstp, srcp, weightp, wdstp, max_weightp, nlm_wref, width, height, stride, channels, bits);
@@ -1127,6 +1134,10 @@ static void VS_CC nlmCreate(const VSMap* in, VSMap* out, void* userData, VSCore*
     auto d = std::make_unique<NLMData>();
 
     d->node = vsapi->mapGetNode(in, "clip", 0, nullptr);
+    if (!d->node) {
+        vsapi->mapSetError(out, "clip must be specified");
+        return;
+    }
     d->vi = vsapi->getVideoInfo(d->node);
 
     auto set_error = [vsapi, out, &d](const char* error_message) -> void {
@@ -1232,6 +1243,9 @@ static void VS_CC nlmCreate(const VSMap* in, VSMap* out, void* userData, VSCore*
     d->wref = static_cast<float>(vsapi->mapGetFloat(in, "wref", 0, &err));
     if (err) {
         d->wref = 1.0f;
+    }
+    if (d->wref < 0.0f) {
+        return set_error("\"wref\" must be non-negative");
     }
 
     d->ref_node = vsapi->mapGetNode(in, "rclip", 0, &err);

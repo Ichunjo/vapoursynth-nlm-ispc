@@ -746,6 +746,13 @@ static void nlmHorizontalS1(
     uniform int height,
     uniform int stride
 ) {
+    if (width == 1) {
+        for (uniform int y = 0; y < height; y++) {
+            temp0[y * stride] = 3.0f * temp[y * stride];
+        }
+        return;
+    }
+
     uniform int end = width - 1;
 
     for (uniform int y = 0; y < height; y++) {
@@ -758,9 +765,7 @@ static void nlmHorizontalS1(
             dst_row[x] = src_row[x - 1] + src_row[x] + src_row[x + 1];
         }
 
-        if (end > 0) {
-            dst_row[width - 1] = src_row[width - 2] + src_row[width - 1] * 2.0f;
-        }
+        dst_row[width - 1] = src_row[width - 2] + src_row[width - 1] * 2.0f;
     }
 }
 

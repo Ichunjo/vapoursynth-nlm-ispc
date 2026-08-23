@@ -1,35 +1,61 @@
 # vs-nlm-ispc
-Non-local means denoise filter, drop-in replacement of the venerable [KNLMeansCL](https://github.com/Khanattila/KNLMeansCL), but without the OpenCL dependency (CPU only).
 
-x86 and arm are supported.
+A Non-Local Means (NLMeans) denoise filter for **VapourSynth (API 4)**, implemented with [ISPC](https://github.com/ispc/ispc) for CPU-only execution.
 
-## Usage
-Prototype:
+Serves as a CPU-based drop-in replacement for NLMeansCL without requiring OpenCL or GPU runtime. Supports x86 (SSE2, AVX, AVX2, AVX-512) and ARM (NEON).
 
-`core.nlm_ispc.NLMeans(clip clip[, int d = 1, int a = 2, int s = 4, float h = 1.2, string channels = "AUTO", int wmode = 0, float wref = 1.0, clip rclip = None])`
+## Installation
+
+### Python Wheel (Recommended)
+
+```bash
+pip install vapoursynth-nlm-ispc
+```
+
+## API
+
+```python
+nlm_ispc.NLMeans(
+    clip: vs.VideoNode,
+    d: int | None = 1,
+    a: int | None = 2,
+    s: int | None = 4,
+    h: float | None = 1.2,
+    channels: str | None = "AUTO",
+    wmode: int | None = 0,
+    wref: float | None = 1.0,
+    rclip: vs.VideoNode | None = None,
+) -> vs.VideoNode:
+```
+
+### Parameters
+
+- **`clip`**: Input clip. Supports 8-16-bit integer and 32-bit float formats (Gray, YUV, RGB).
+- **`d`**: Temporal radius. `0` = spatial filtering only; `> 0` = temporal radius ($2d + 1$ frames).
+- **`a`**: Search window radius. Search area is $(2a + 1) \times (2a + 1)$ pixels.
+- **`s`**: Similarity neighborhood patch radius. Patch size is $(2s + 1) \times (2s + 1)$ pixels.
+- **`h`**: Filtering strength. Higher values increase smoothing.
+- **`channels`**: Color channels to process (`"Y"`, `"UV"`, `"YUV"`, `"RGB"`, `"AUTO"`).
+  - `"AUTO"` processes `"RGB"` for RGB clips and `"Y"` (luma) for Gray/YUV clips.
+  - `"YUV"` processes all 3 planes (requires YUV444).
+- **`wmode`** (_int_, default `0`): Weight function:
+  - `0`: Welsch
+  - `1`: Modified Bisquare A
+  - `2`: Modified Bisquare B
+  - `3`: Modified Bisquare C
+- **`wref`**: Weight multiplier for the central pixel.
+- **`rclip`**: Reference clip used to calculate similarity weights. Must match `clip` format and frame count.
 
 ## Compilation
-[ISPC](https://github.com/ispc/ispc) is required.
 
-### x86
+### Requirements
+
+- CMake >= 3.20
+- C++20 compliant compiler
+- [ISPC](https://github.com/ispc/ispc)
+
+### Build
+
 ```bash
-cmake -S . -B build -D CMAKE_BUILD_TYPE=Release \
--D CMAKE_ISPC_INSTRUCTION_SETS="sse2-i32x4;avx1-i32x4;avx2-i32x8" \
--D CMAKE_ISPC_FLAGS="--opt=fast-math"
-
-cmake --build build
-
-cmake --install build
+uv build --wheel
 ```
-
-### arm
-```bash
-cmake -S . -B build -D CMAKE_BUILD_TYPE=Release \
--D CMAKE_ISPC_INSTRUCTION_SETS="neon-i32x4" \
--D CMAKE_ISPC_FLAGS="--opt=fast-math"
-
-cmake --build build
-
-cmake --install build
-```
-

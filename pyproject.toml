@@ -22,8 +22,8 @@ dependencies = ["vapoursynth>=79"]
 dev = ["cmake>=4.4.2", "ninja>=1.13.0", "gersemi>=0.28.1"]
 
 [project.urls]
-"Source Code" = "https://github.com/AmusementClub/vs-nlm-ispc"
-"Bug Tracker" = "https://github.com/AmusementClub/vs-nlm-ispc/issues"
+"Source Code" = "https://github.com/Ichunjo/vapoursynth-nlm-ispc"
+"Bug Tracker" = "https://github.com/Ichunjo/vapoursynth-nlm-ispc/issues"
 
 [tool.scikit-build]
 sdist.include = ["source/**", "CMakeLists.txt", "README.md", "LICENSE"]

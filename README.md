@@ -1,4 +1,4 @@
-# vs-nlm-ispc
+# NLM-ISPC
 
 A Non-Local Means (NLMeans) denoise filter for **VapourSynth (API 4)**, implemented with [ISPC](https://github.com/ispc/ispc) for CPU-only execution.
 
@@ -6,7 +6,7 @@ Serves as a CPU-based drop-in replacement for NLMeansCL without requiring OpenCL
 
 ## Installation
 
-### Python Wheel (Recommended)
+### Python Wheel
 
 ```bash
 pip install vapoursynth-nlm-ispc

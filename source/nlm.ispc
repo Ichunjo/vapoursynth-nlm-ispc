@@ -51,8 +51,8 @@ export void nlmDistanceLuma_f32(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_neighbor = CLAMPY(y + offset_y);
@@ -66,10 +66,12 @@ export void nlmDistanceLuma_f32(
             temp_row[x] = 3.0f * square(u1 - u1_pq);
         }
 
-        foreach (x = start_x... end_x) {
-            float u1 = center_row[x];
-            float u1_pq = neighbor_row[x + offset_x];
-            temp_row[x] = 3.0f * square(u1 - u1_pq);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u1 = center_row[x];
+                float u1_pq = neighbor_row[x + offset_x];
+                temp_row[x] = 3.0f * square(u1 - u1_pq);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -91,8 +93,8 @@ export void nlmDistanceLuma_u8(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float factor = 3.0f * square(inv_divisor);
 
     for (uniform int y = 0; y < height; y++) {
@@ -106,9 +108,11 @@ export void nlmDistanceLuma_u8(
             temp_row[x] = factor * (float)(diff * diff);
         }
 
-        foreach (x = start_x... end_x) {
-            int32 diff = (int32)center_row[x] - (int32)neighbor_row[x + offset_x];
-            temp_row[x] = factor * (float)(diff * diff);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                int32 diff = (int32)center_row[x] - (int32)neighbor_row[x + offset_x];
+                temp_row[x] = factor * (float)(diff * diff);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -129,8 +133,8 @@ export void nlmDistanceLuma_u16(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float factor = 3.0f * square(inv_divisor);
 
     for (uniform int y = 0; y < height; y++) {
@@ -144,9 +148,11 @@ export void nlmDistanceLuma_u16(
             temp_row[x] = factor * (float)(diff * diff);
         }
 
-        foreach (x = start_x... end_x) {
-            int32 diff = (int32)center_row[x] - (int32)neighbor_row[x + offset_x];
-            temp_row[x] = factor * (float)(diff * diff);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                int32 diff = (int32)center_row[x] - (int32)neighbor_row[x + offset_x];
+                temp_row[x] = factor * (float)(diff * diff);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -172,8 +178,8 @@ export void nlmDistanceChroma_f32(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_neighbor = CLAMPY(y + offset_y);
@@ -192,12 +198,14 @@ export void nlmDistanceChroma_f32(
             temp_row[x] = 1.5f * (square(u1_1 - u1_pq_1) + square(u1_2 - u1_pq_2));
         }
 
-        foreach (x = start_x... end_x) {
-            float u1_1 = c_row1[x];
-            float u1_2 = c_row2[x];
-            float u1_pq_1 = n_row1[x + offset_x];
-            float u1_pq_2 = n_row2[x + offset_x];
-            temp_row[x] = 1.5f * (square(u1_1 - u1_pq_1) + square(u1_2 - u1_pq_2));
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u1_1 = c_row1[x];
+                float u1_2 = c_row2[x];
+                float u1_pq_1 = n_row1[x + offset_x];
+                float u1_pq_2 = n_row2[x + offset_x];
+                temp_row[x] = 1.5f * (square(u1_1 - u1_pq_1) + square(u1_2 - u1_pq_2));
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -224,8 +232,8 @@ export void nlmDistanceChroma_u8(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float factor = 1.5f * square(inv_divisor);
 
     for (uniform int y = 0; y < height; y++) {
@@ -243,10 +251,12 @@ export void nlmDistanceChroma_u8(
             temp_row[x] = factor * (float)(d1 * d1 + d2 * d2);
         }
 
-        foreach (x = start_x... end_x) {
-            int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
-            int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
-            temp_row[x] = factor * (float)(d1 * d1 + d2 * d2);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
+                int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
+                temp_row[x] = factor * (float)(d1 * d1 + d2 * d2);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -271,8 +281,8 @@ export void nlmDistanceChroma_u16(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float factor = 1.5f * square(inv_divisor);
 
     for (uniform int y = 0; y < height; y++) {
@@ -290,10 +300,12 @@ export void nlmDistanceChroma_u16(
             temp_row[x] = factor * (float)(d1 * d1 + d2 * d2);
         }
 
-        foreach (x = start_x... end_x) {
-            int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
-            int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
-            temp_row[x] = factor * (float)(d1 * d1 + d2 * d2);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
+                int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
+                temp_row[x] = factor * (float)(d1 * d1 + d2 * d2);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -323,8 +335,8 @@ export void nlmDistanceYUV_f32(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_neighbor = CLAMPY(y + offset_y);
@@ -347,14 +359,16 @@ export void nlmDistanceYUV_f32(
             temp_row[x] = square(u1_1 - u1_pq_1) + square(u1_2 - u1_pq_2) + square(u1_3 - u1_pq_3);
         }
 
-        foreach (x = start_x... end_x) {
-            float u1_1 = c_row1[x];
-            float u1_2 = c_row2[x];
-            float u1_3 = c_row3[x];
-            float u1_pq_1 = n_row1[x + offset_x];
-            float u1_pq_2 = n_row2[x + offset_x];
-            float u1_pq_3 = n_row3[x + offset_x];
-            temp_row[x] = square(u1_1 - u1_pq_1) + square(u1_2 - u1_pq_2) + square(u1_3 - u1_pq_3);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u1_1 = c_row1[x];
+                float u1_2 = c_row2[x];
+                float u1_3 = c_row3[x];
+                float u1_pq_1 = n_row1[x + offset_x];
+                float u1_pq_2 = n_row2[x + offset_x];
+                float u1_pq_3 = n_row3[x + offset_x];
+                temp_row[x] = square(u1_1 - u1_pq_1) + square(u1_2 - u1_pq_2) + square(u1_3 - u1_pq_3);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -385,8 +399,8 @@ export void nlmDistanceYUV_u8(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float factor = square(inv_divisor);
 
     for (uniform int y = 0; y < height; y++) {
@@ -407,11 +421,13 @@ export void nlmDistanceYUV_u8(
             temp_row[x] = factor * (float)(d1 * d1 + d2 * d2 + d3 * d3);
         }
 
-        foreach (x = start_x... end_x) {
-            int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
-            int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
-            int32 d3 = (int32)c_row3[x] - (int32)n_row3[x + offset_x];
-            temp_row[x] = factor * (float)(d1 * d1 + d2 * d2 + d3 * d3);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
+                int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
+                int32 d3 = (int32)c_row3[x] - (int32)n_row3[x + offset_x];
+                temp_row[x] = factor * (float)(d1 * d1 + d2 * d2 + d3 * d3);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -439,8 +455,8 @@ export void nlmDistanceYUV_u16(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float factor = square(inv_divisor);
 
     for (uniform int y = 0; y < height; y++) {
@@ -461,11 +477,13 @@ export void nlmDistanceYUV_u16(
             temp_row[x] = factor * (float)(d1 * d1 + d2 * d2 + d3 * d3);
         }
 
-        foreach (x = start_x... end_x) {
-            int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
-            int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
-            int32 d3 = (int32)c_row3[x] - (int32)n_row3[x + offset_x];
-            temp_row[x] = factor * (float)(d1 * d1 + d2 * d2 + d3 * d3);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                int32 d1 = (int32)c_row1[x] - (int32)n_row1[x + offset_x];
+                int32 d2 = (int32)c_row2[x] - (int32)n_row2[x + offset_x];
+                int32 d3 = (int32)c_row3[x] - (int32)n_row3[x + offset_x];
+                temp_row[x] = factor * (float)(d1 * d1 + d2 * d2 + d3 * d3);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -496,8 +514,8 @@ export void nlmDistanceRGB_f32(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_neighbor = CLAMPY(y + offset_y);
@@ -522,16 +540,18 @@ export void nlmDistanceRGB_f32(
                           (1.0f - m_red) * square(u1_3 - u1_pq_3);
         }
 
-        foreach (x = start_x... end_x) {
-            float u1_1 = c_row1[x];
-            float u1_2 = c_row2[x];
-            float u1_3 = c_row3[x];
-            float u1_pq_1 = n_row1[x + offset_x];
-            float u1_pq_2 = n_row2[x + offset_x];
-            float u1_pq_3 = n_row3[x + offset_x];
-            float m_red = (u1_1 + u1_pq_1) / 6.0f;
-            temp_row[x] = (2.0f / 3.0f + m_red) * square(u1_1 - u1_pq_1) + (4.0f / 3.0f) * square(u1_2 - u1_pq_2) +
-                          (1.0f - m_red) * square(u1_3 - u1_pq_3);
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u1_1 = c_row1[x];
+                float u1_2 = c_row2[x];
+                float u1_3 = c_row3[x];
+                float u1_pq_1 = n_row1[x + offset_x];
+                float u1_pq_2 = n_row2[x + offset_x];
+                float u1_pq_3 = n_row3[x + offset_x];
+                float m_red = (u1_1 + u1_pq_1) / 6.0f;
+                temp_row[x] = (2.0f / 3.0f + m_red) * square(u1_1 - u1_pq_1) + (4.0f / 3.0f) * square(u1_2 - u1_pq_2) +
+                              (1.0f - m_red) * square(u1_3 - u1_pq_3);
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -564,8 +584,8 @@ export void nlmDistanceRGB_u8(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float sq_inv_divisor = square(inv_divisor);
     uniform float inv_6_divisor = inv_divisor / 6.0f;
 
@@ -593,17 +613,19 @@ export void nlmDistanceRGB_u8(
                           sq_inv_divisor;
         }
 
-        foreach (x = start_x... end_x) {
-            float u1_1 = c_row1[x];
-            float u1_2 = c_row2[x];
-            float u1_3 = c_row3[x];
-            float u1_pq_1 = n_row1[x + offset_x];
-            float u1_pq_2 = n_row2[x + offset_x];
-            float u1_pq_3 = n_row3[x + offset_x];
-            float m_red = (u1_1 + u1_pq_1) * inv_6_divisor;
-            temp_row[x] = ((2.0f / 3.0f + m_red) * square(u1_1 - u1_pq_1) + (4.0f / 3.0f) * square(u1_2 - u1_pq_2) +
-                           (1.0f - m_red) * square(u1_3 - u1_pq_3)) *
-                          sq_inv_divisor;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u1_1 = c_row1[x];
+                float u1_2 = c_row2[x];
+                float u1_3 = c_row3[x];
+                float u1_pq_1 = n_row1[x + offset_x];
+                float u1_pq_2 = n_row2[x + offset_x];
+                float u1_pq_3 = n_row3[x + offset_x];
+                float m_red = (u1_1 + u1_pq_1) * inv_6_divisor;
+                temp_row[x] = ((2.0f / 3.0f + m_red) * square(u1_1 - u1_pq_1) + (4.0f / 3.0f) * square(u1_2 - u1_pq_2) +
+                               (1.0f - m_red) * square(u1_3 - u1_pq_3)) *
+                              sq_inv_divisor;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -637,8 +659,8 @@ export void nlmDistanceRGB_u16(
     uniform int stride,
     uniform float inv_divisor
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
     uniform float sq_inv_divisor = square(inv_divisor);
     uniform float inv_6_divisor = inv_divisor / 6.0f;
 
@@ -666,17 +688,19 @@ export void nlmDistanceRGB_u16(
                           sq_inv_divisor;
         }
 
-        foreach (x = start_x... end_x) {
-            float u1_1 = c_row1[x];
-            float u1_2 = c_row2[x];
-            float u1_3 = c_row3[x];
-            float u1_pq_1 = n_row1[x + offset_x];
-            float u1_pq_2 = n_row2[x + offset_x];
-            float u1_pq_3 = n_row3[x + offset_x];
-            float m_red = (u1_1 + u1_pq_1) * inv_6_divisor;
-            temp_row[x] = ((2.0f / 3.0f + m_red) * square(u1_1 - u1_pq_1) + (4.0f / 3.0f) * square(u1_2 - u1_pq_2) +
-                           (1.0f - m_red) * square(u1_3 - u1_pq_3)) *
-                          sq_inv_divisor;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u1_1 = c_row1[x];
+                float u1_2 = c_row2[x];
+                float u1_3 = c_row3[x];
+                float u1_pq_1 = n_row1[x + offset_x];
+                float u1_pq_2 = n_row2[x + offset_x];
+                float u1_pq_3 = n_row3[x + offset_x];
+                float m_red = (u1_1 + u1_pq_1) * inv_6_divisor;
+                temp_row[x] = ((2.0f / 3.0f + m_red) * square(u1_1 - u1_pq_1) + (4.0f / 3.0f) * square(u1_2 - u1_pq_2) +
+                               (1.0f - m_red) * square(u1_3 - u1_pq_3)) *
+                              sq_inv_divisor;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1169,8 +1193,8 @@ export void nlmAccumulationCh1_f32(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1195,14 +1219,16 @@ export void nlmAccumulationCh1_f32(
             wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq = src_bwd_row[x + offset_x];
-            float u1_mq = src_fwd_row[x - offset_x];
-            wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq = src_bwd_row[x + offset_x];
+                float u1_mq = src_fwd_row[x - offset_x];
+                wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1231,8 +1257,8 @@ export void nlmAccumulationCh1_u8(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1257,14 +1283,16 @@ export void nlmAccumulationCh1_u8(
             wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq = src_bwd_row[x + offset_x];
-            float u1_mq = src_fwd_row[x - offset_x];
-            wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq = src_bwd_row[x + offset_x];
+                float u1_mq = src_fwd_row[x - offset_x];
+                wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1293,8 +1321,8 @@ export void nlmAccumulationCh1_u16(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1319,14 +1347,16 @@ export void nlmAccumulationCh1_u16(
             wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq = src_bwd_row[x + offset_x];
-            float u1_mq = src_fwd_row[x - offset_x];
-            wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq = src_bwd_row[x + offset_x];
+                float u1_mq = src_fwd_row[x - offset_x];
+                wdst_row[x] += u4 * u1_pq + u4_mq * u1_mq;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1362,8 +1392,8 @@ export void nlmAccumulationCh2_f32(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1396,17 +1426,19 @@ export void nlmAccumulationCh2_f32(
             wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq_1 = src_bwd_row1[x + offset_x];
-            float u1_pq_2 = src_bwd_row2[x + offset_x];
-            float u1_mq_1 = src_fwd_row1[x - offset_x];
-            float u1_mq_2 = src_fwd_row2[x - offset_x];
-            wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
-            wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq_1 = src_bwd_row1[x + offset_x];
+                float u1_pq_2 = src_bwd_row2[x + offset_x];
+                float u1_mq_1 = src_fwd_row1[x - offset_x];
+                float u1_mq_2 = src_fwd_row2[x - offset_x];
+                wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
+                wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1443,8 +1475,8 @@ export void nlmAccumulationCh2_u8(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1477,17 +1509,19 @@ export void nlmAccumulationCh2_u8(
             wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq_1 = src_bwd_row1[x + offset_x];
-            float u1_pq_2 = src_bwd_row2[x + offset_x];
-            float u1_mq_1 = src_fwd_row1[x - offset_x];
-            float u1_mq_2 = src_fwd_row2[x - offset_x];
-            wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
-            wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq_1 = src_bwd_row1[x + offset_x];
+                float u1_pq_2 = src_bwd_row2[x + offset_x];
+                float u1_mq_1 = src_fwd_row1[x - offset_x];
+                float u1_mq_2 = src_fwd_row2[x - offset_x];
+                wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
+                wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1524,8 +1558,8 @@ export void nlmAccumulationCh2_u16(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1558,17 +1592,19 @@ export void nlmAccumulationCh2_u16(
             wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq_1 = src_bwd_row1[x + offset_x];
-            float u1_pq_2 = src_bwd_row2[x + offset_x];
-            float u1_mq_1 = src_fwd_row1[x - offset_x];
-            float u1_mq_2 = src_fwd_row2[x - offset_x];
-            wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
-            wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq_1 = src_bwd_row1[x + offset_x];
+                float u1_pq_2 = src_bwd_row2[x + offset_x];
+                float u1_mq_1 = src_fwd_row1[x - offset_x];
+                float u1_mq_2 = src_fwd_row2[x - offset_x];
+                wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
+                wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1612,8 +1648,8 @@ export void nlmAccumulationCh3_f32(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1652,20 +1688,22 @@ export void nlmAccumulationCh3_f32(
             wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq_1 = src_bwd_row1[x + offset_x];
-            float u1_pq_2 = src_bwd_row2[x + offset_x];
-            float u1_pq_3 = src_bwd_row3[x + offset_x];
-            float u1_mq_1 = src_fwd_row1[x - offset_x];
-            float u1_mq_2 = src_fwd_row2[x - offset_x];
-            float u1_mq_3 = src_fwd_row3[x - offset_x];
-            wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
-            wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
-            wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq_1 = src_bwd_row1[x + offset_x];
+                float u1_pq_2 = src_bwd_row2[x + offset_x];
+                float u1_pq_3 = src_bwd_row3[x + offset_x];
+                float u1_mq_1 = src_fwd_row1[x - offset_x];
+                float u1_mq_2 = src_fwd_row2[x - offset_x];
+                float u1_mq_3 = src_fwd_row3[x - offset_x];
+                wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
+                wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+                wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1708,8 +1746,8 @@ export void nlmAccumulationCh3_u8(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1748,20 +1786,22 @@ export void nlmAccumulationCh3_u8(
             wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq_1 = src_bwd_row1[x + offset_x];
-            float u1_pq_2 = src_bwd_row2[x + offset_x];
-            float u1_pq_3 = src_bwd_row3[x + offset_x];
-            float u1_mq_1 = src_fwd_row1[x - offset_x];
-            float u1_mq_2 = src_fwd_row2[x - offset_x];
-            float u1_mq_3 = src_fwd_row3[x - offset_x];
-            wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
-            wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
-            wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq_1 = src_bwd_row1[x + offset_x];
+                float u1_pq_2 = src_bwd_row2[x + offset_x];
+                float u1_pq_3 = src_bwd_row3[x + offset_x];
+                float u1_mq_1 = src_fwd_row1[x - offset_x];
+                float u1_mq_2 = src_fwd_row2[x - offset_x];
+                float u1_mq_3 = src_fwd_row3[x - offset_x];
+                wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
+                wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+                wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {
@@ -1804,8 +1844,8 @@ export void nlmAccumulationCh3_u16(
     uniform int height,
     uniform int stride
 ) {
-    uniform int start_x = abs(offset_x);
-    uniform int end_x = width - abs(offset_x);
+    uniform int start_x = min(abs(offset_x), width);
+    uniform int end_x = max(start_x, width - abs(offset_x));
 
     for (uniform int y = 0; y < height; y++) {
         uniform int y_mq = CLAMPY(y - offset_y);
@@ -1844,20 +1884,22 @@ export void nlmAccumulationCh3_u16(
             wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
         }
 
-        foreach (x = start_x... end_x) {
-            float u4 = t1_row[x];
-            float u4_mq = t2_row[x - offset_x];
-            weight_row[x] += u4 + u4_mq;
-            max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
-            float u1_pq_1 = src_bwd_row1[x + offset_x];
-            float u1_pq_2 = src_bwd_row2[x + offset_x];
-            float u1_pq_3 = src_bwd_row3[x + offset_x];
-            float u1_mq_1 = src_fwd_row1[x - offset_x];
-            float u1_mq_2 = src_fwd_row2[x - offset_x];
-            float u1_mq_3 = src_fwd_row3[x - offset_x];
-            wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
-            wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
-            wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
+        if (end_x > start_x) {
+            foreach (x = start_x... end_x) {
+                float u4 = t1_row[x];
+                float u4_mq = t2_row[x - offset_x];
+                weight_row[x] += u4 + u4_mq;
+                max_weight_row[x] = max(max(u4, u4_mq), max_weight_row[x]);
+                float u1_pq_1 = src_bwd_row1[x + offset_x];
+                float u1_pq_2 = src_bwd_row2[x + offset_x];
+                float u1_pq_3 = src_bwd_row3[x + offset_x];
+                float u1_mq_1 = src_fwd_row1[x - offset_x];
+                float u1_mq_2 = src_fwd_row2[x - offset_x];
+                float u1_mq_3 = src_fwd_row3[x - offset_x];
+                wdst_row1[x] += u4 * u1_pq_1 + u4_mq * u1_mq_1;
+                wdst_row2[x] += u4 * u1_pq_2 + u4_mq * u1_mq_2;
+                wdst_row3[x] += u4 * u1_pq_3 + u4_mq * u1_mq_3;
+            }
         }
 
         for (uniform int x = end_x; x < width; x++) {

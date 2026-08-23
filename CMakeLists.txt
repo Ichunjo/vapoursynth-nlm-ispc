@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20.0)
 
-project(vs-nlm-ispc VERSION 0.1 LANGUAGES CXX ISPC)
+if(NOT DEFINED SKBUILD_PROJECT_VERSION)
+  set(SKBUILD_PROJECT_VERSION "0.0.0")
+endif()
+
+project(vs-nlm-ispc VERSION "${SKBUILD_PROJECT_VERSION}" LANGUAGES CXX ISPC)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -34,31 +38,13 @@ if(NOT DEFINED CMAKE_ISPC_INSTRUCTION_SETS)
   endif()
 endif()
 
-if(MSVC)
-  target_compile_options(
-    vsnlm_ispc
-    PRIVATE
-      "$<$<COMPILE_LANGUAGE:ISPC>:-O3>"
-      "$<$<COMPILE_LANGUAGE:ISPC>:--math-lib=fast>"
-      "$<$<COMPILE_LANGUAGE:ISPC>:--opt=fast-math:aggressive>"
-      "$<$<COMPILE_LANGUAGE:ISPC>:--opt=disable-assertions>"
-      "$<$<COMPILE_LANGUAGE:CXX>:/O2>"
-      "$<$<COMPILE_LANGUAGE:CXX>:/Oi>"
-      "$<$<COMPILE_LANGUAGE:CXX>:/fp:fast>"
-      "$<$<COMPILE_LANGUAGE:CXX>:/GS->"
-  )
-else()
-  target_compile_options(
-    vsnlm_ispc
-    PRIVATE
-      "$<$<COMPILE_LANGUAGE:ISPC>:-O3>"
-      "$<$<COMPILE_LANGUAGE:ISPC>:--math-lib=fast>"
-      "$<$<COMPILE_LANGUAGE:ISPC>:--opt=fast-math:aggressive>"
-      "$<$<COMPILE_LANGUAGE:ISPC>:--opt=disable-assertions>"
-      "$<$<COMPILE_LANGUAGE:CXX>:-O3>"
-      "$<$<COMPILE_LANGUAGE:CXX>:-ffast-math>"
-  )
-endif()
+target_compile_options(
+  vsnlm_ispc
+  PRIVATE
+    "$<$<COMPILE_LANGUAGE:ISPC>:-O3;--math-lib=fast;--opt=fast-math:aggressive;--opt=disable-assertions>"
+    $<$<COMPILE_LANGUAGE:CXX>:$<$<CXX_COMPILER_ID:MSVC>:/O2;/Oi;/fp:fast;/GS->>
+    $<$<COMPILE_LANGUAGE:CXX>:$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3;-ffast-math>>
+)
 
 # 1. Look for VapourSynth headers
 if(NOT VAPOURSYNTH_INCLUDE_DIR AND VS_INCLUDE_DIR)
@@ -80,47 +66,17 @@ find_path(
 
 if(VAPOURSYNTH_INCLUDE_DIR)
   message(STATUS "Found VapourSynth headers: ${VAPOURSYNTH_INCLUDE_DIR}")
-  target_include_directories(vsnlm_ispc PRIVATE ${VAPOURSYNTH_INCLUDE_DIR})
 else()
   message(WARNING "VapourSynth headers not found")
 endif()
 
-# 2. Version handling
-find_package(Git QUIET)
-
-if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    OUTPUT_VARIABLE VCS_TAG
-  )
-  if(VCS_TAG)
-    string(STRIP "${VCS_TAG}" VCS_TAG)
-  endif()
-endif()
-
-if(NOT VCS_TAG AND SKBUILD_PROJECT_VERSION)
-  set(VCS_TAG "v${SKBUILD_PROJECT_VERSION}")
-endif()
-
-if(VCS_TAG MATCHES "^v?([0-9]+)(\\.([0-9]+))?$")
-  set(PLUGIN_VERSION_MAJOR "${CMAKE_MATCH_1}")
-  if(CMAKE_MATCH_3)
-    set(PLUGIN_VERSION_MINOR "${CMAKE_MATCH_3}")
-  else()
-    set(PLUGIN_VERSION_MINOR 0)
-  endif()
-else()
-  message(FATAL_ERROR "Unknown or unsupported plugin version '${VCS_TAG}'")
-endif()
-
-message(STATUS "vs-nlm-ispc version: ${PLUGIN_VERSION_MAJOR}.${PLUGIN_VERSION_MINOR} (from '${VCS_TAG}')")
-
+# 2. Version handling and include directories
 target_compile_definitions(
   vsnlm_ispc
-  PRIVATE PLUGIN_VERSION_MAJOR=${PLUGIN_VERSION_MAJOR} PLUGIN_VERSION_MINOR=${PLUGIN_VERSION_MINOR}
+  PRIVATE PLUGIN_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} PLUGIN_VERSION_MINOR=${PROJECT_VERSION_MINOR}
 )
-target_include_directories(vsnlm_ispc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+target_include_directories(vsnlm_ispc PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${VAPOURSYNTH_INCLUDE_DIR})
 
 # 3. Installation into wheel structure
 install(TARGETS vsnlm_ispc LIBRARY DESTINATION vapoursynth/plugins RUNTIME DESTINATION vapoursynth/plugins)

@@ -11,6 +11,9 @@ on:
         required: true
         type: string
 
+env:
+  ISPC_VERSION: "1.30.0"
+
 jobs:
   build:
     name: Build ${{ inputs.dist }} (${{ inputs.os }})
@@ -25,8 +28,6 @@ jobs:
 
       - name: Set up uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-        with:
-          enable-cache: false
 
       - name: Setup MSVC
         if: runner.os == 'Windows'
@@ -36,7 +37,7 @@ jobs:
         if: inputs.dist == 'wheel'
         shell: bash
         run: |
-          ISPC_VERSION="1.30.0"
+          ISPC_VERSION="${{ env.ISPC_VERSION }}"
           if [ "${{ runner.os }}" = "Windows" ]; then
             curl -s -o ispc.zip -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-windows.zip"
             unzip -q ispc.zip

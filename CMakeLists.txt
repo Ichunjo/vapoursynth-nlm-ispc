@@ -6,7 +6,7 @@ add_library(vsnlm_ispc SHARED source/vsnlm.cpp source/nlm.ispc)
 
 set_target_properties(vsnlm_ispc PROPERTIES
     CXX_EXTENSIONS OFF
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
 
@@ -22,7 +22,27 @@ if(NOT DEFINED CMAKE_ISPC_INSTRUCTION_SETS)
     endif()
 endif()
 
-target_compile_options(vsnlm_ispc PRIVATE "$<$<COMPILE_LANGUAGE:ISPC>:--opt=fast-math>")
+if(MSVC)
+    target_compile_options(vsnlm_ispc PRIVATE
+        "$<$<COMPILE_LANGUAGE:ISPC>:-O3>"
+        "$<$<COMPILE_LANGUAGE:ISPC>:--math-lib=fast>"
+        "$<$<COMPILE_LANGUAGE:ISPC>:--opt=fast-math:aggressive>"
+        "$<$<COMPILE_LANGUAGE:ISPC>:--opt=disable-assertions>"
+        "$<$<COMPILE_LANGUAGE:CXX>:/O2>"
+        "$<$<COMPILE_LANGUAGE:CXX>:/Oi>"
+        "$<$<COMPILE_LANGUAGE:CXX>:/fp:fast>"
+        "$<$<COMPILE_LANGUAGE:CXX>:/GS->"
+    )
+else()
+    target_compile_options(vsnlm_ispc PRIVATE
+        "$<$<COMPILE_LANGUAGE:ISPC>:-O3>"
+        "$<$<COMPILE_LANGUAGE:ISPC>:--math-lib=fast>"
+        "$<$<COMPILE_LANGUAGE:ISPC>:--opt=fast-math:aggressive>"
+        "$<$<COMPILE_LANGUAGE:ISPC>:--opt=disable-assertions>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-O3>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-ffast-math>"
+    )
+endif()
 
 # 1. Look for VapourSynth headers
 if(NOT VAPOURSYNTH_INCLUDE_DIR AND VS_INCLUDE_DIR)

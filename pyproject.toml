@@ -9,11 +9,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "vapoursynth-nlm-ispc"
 dynamic = ["version"]
-description = """
-Non-local means denoise filter,
-drop-in replacement of the venerable KNLMeansCL for VapourSynth,
-but without the OpenCL dependency (CPU only)
-"""
+description = "Non-local means denoise filter for VapourSynth (ISPC, CPU only)"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]

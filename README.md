@@ -38,7 +38,7 @@ nlm_ispc.NLMeans(
 - **`channels`**: Color channels to process (`"Y"`, `"UV"`, `"YUV"`, `"RGB"`, `"AUTO"`).
   - `"AUTO"` processes `"RGB"` for RGB clips and `"Y"` (luma) for Gray/YUV clips.
   - `"YUV"` processes all 3 planes (requires YUV444).
-- **`wmode`** (_int_, default `0`): Weight function:
+- **`wmode`**: Weight function:
   - `0`: Welsch
   - `1`: Modified Bisquare A
   - `2`: Modified Bisquare B

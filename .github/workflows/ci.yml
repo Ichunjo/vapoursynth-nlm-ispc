@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "source/**"
+      - "CMakeLists.txt"
+      - "pyproject.toml"
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - "source/**"
+      - "CMakeLists.txt"
+      - "pyproject.toml"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+jobs:
+  build-sdist:
+    uses: ./.github/workflows/cd-build.yml
+    with:
+      os: ubuntu-latest
+      dist: sdist
+
+  build-windows:
+    uses: ./.github/workflows/cd-build.yml
+    with:
+      os: windows-2025-vs2026
+      dist: wheel
+
+  build-linux-x64:
+    uses: ./.github/workflows/cd-build.yml
+    with:
+      os: ubuntu-24.04
+      dist: wheel
+
+  build-linux-arm64:
+    uses: ./.github/workflows/cd-build.yml
+    with:
+      os: ubuntu-24.04-arm
+      dist: wheel
+
+  build-macos-x64:
+    uses: ./.github/workflows/cd-build.yml
+    with:
+      os: macos-26-intel
+      dist: wheel
+
+  build-macos-arm64:
+    uses: ./.github/workflows/cd-build.yml
+    with:
+      os: macos-26
+      dist: wheel

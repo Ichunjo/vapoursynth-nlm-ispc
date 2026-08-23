@@ -1,0 +1,79 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      dist:
+        description: "sdist or wheel"
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build ${{ inputs.dist }} (${{ inputs.os }})
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: false
+
+      - name: Setup MSVC
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-msvc
+
+      - name: Setup ISPC
+        if: inputs.dist == 'wheel'
+        shell: bash
+        run: |
+          ISPC_VERSION="1.30.0"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            curl -s -o ispc.zip -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-windows.zip"
+            unzip -q ispc.zip
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            curl -s -o ispc.tar.gz -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-macOS.universal.tar.gz"
+            tar -xzf ispc.tar.gz
+          elif [ "${{ runner.os }}" = "Linux" ]; then
+            if [ "${{ runner.arch }}" = "ARM64" ]; then
+              curl -s -o ispc.tar.gz -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-linux.aarch64.tar.gz"
+            else
+              curl -s -o ispc.tar.gz -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-linux.tar.gz"
+            fi
+            tar -xzf ispc.tar.gz
+          fi
+          mv ispc-*/ ispc/
+          echo "$PWD/ispc/bin" >> $GITHUB_PATH
+
+      - name: Build ${{ inputs.dist }}
+        run: uv build --${{ inputs.dist }}
+
+      - name: Repair wheel (Linux)
+        if: runner.os == 'Linux' && inputs.dist == 'wheel'
+        run: |
+          uvx --with patchelf auditwheel repair --strip dist/*.whl -w repaired_wheels
+          rm dist/*.whl
+          mv repaired_wheels/*.whl dist/
+
+      - name: Repair wheel (macOS)
+        if: runner.os == 'macOS' && inputs.dist == 'wheel'
+        run: |
+          uvx --from delocate delocate-wheel -v dist/*.whl -w repaired_wheels
+          rm dist/*.whl
+          mv repaired_wheels/*.whl dist/
+          uvx --from delocate delocate-listdeps dist/*.whl
+
+      - name: Upload ${{ inputs.dist }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dist-${{ inputs.dist }}-${{ inputs.os }}
+          path: dist/${{ inputs.dist == 'sdist' && '*.tar.gz' || '*.whl' }}

@@ -10,36 +10,43 @@ set_target_properties(vsnlm_ispc PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-find_package(PkgConfig QUIET MODULE)
-
-if(PKG_CONFIG_FOUND)
-    pkg_search_module(VS vapoursynth)
-
-    if(VS_FOUND)
-        message(STATUS "Found VapourSynth r${VS_VERSION}")
-
-        cmake_path(APPEND install_dir ${VS_LIBDIR} vapoursynth)
-        target_include_directories(vsnlm_ispc PRIVATE ${VS_INCLUDE_DIRS})
-
-        install(TARGETS vsnlm_ispc LIBRARY DESTINATION ${install_dir})
+if(NOT DEFINED CMAKE_ISPC_INSTRUCTION_SETS)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm|aarch64|ARM64" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+        set_target_properties(vsnlm_ispc PROPERTIES
+            ISPC_INSTRUCTION_SETS "neon-i32x4"
+        )
+    else()
+        set_target_properties(vsnlm_ispc PROPERTIES
+            ISPC_INSTRUCTION_SETS "sse2-i32x4;avx1-i32x4;avx2-i32x8;avx512skx-i32x16"
+        )
     endif()
 endif()
 
-if(NOT VS_FOUND)
-    set(VS_INCLUDE_DIR "" CACHE PATH "Path to VapourSynth headers")
+target_compile_options(vsnlm_ispc PRIVATE "$<$<COMPILE_LANGUAGE:ISPC>:--opt=fast-math>")
 
-    if(VS_INCLUDE_DIR STREQUAL "")
-        message(WARNING "VapourSynth not found")
-    endif()
-
-    target_include_directories(vsnlm_ispc PRIVATE ${VS_INCLUDE_DIR})
-
-    install(TARGETS vsnlm_ispc LIBRARY RUNTIME)
+# 1. Look for VapourSynth headers
+if(NOT VAPOURSYNTH_INCLUDE_DIR AND VS_INCLUDE_DIR)
+    set(VAPOURSYNTH_INCLUDE_DIR "${VS_INCLUDE_DIR}")
 endif()
 
+find_path(VAPOURSYNTH_INCLUDE_DIR
+    NAMES VapourSynth4.h VapourSynth.h
+    HINTS "${CMAKE_CURRENT_SOURCE_DIR}/vapoursynth/include" "${CMAKE_CURRENT_SOURCE_DIR}/vapoursynth"
+    PATH_SUFFIXES vapoursynth/include vapoursynth include
+    DOC "Path to VapourSynth headers"
+)
+
+if(VAPOURSYNTH_INCLUDE_DIR)
+    message(STATUS "Found VapourSynth headers: ${VAPOURSYNTH_INCLUDE_DIR}")
+    target_include_directories(vsnlm_ispc PRIVATE ${VAPOURSYNTH_INCLUDE_DIR})
+else()
+    message(WARNING "VapourSynth headers not found")
+endif()
+
+# 2. Version handling
 find_package(Git QUIET)
 
-if(GIT_FOUND)
+if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     execute_process(
         COMMAND ${GIT_EXECUTABLE} describe --tags --long --always
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -50,6 +57,10 @@ if(GIT_FOUND)
     endif()
 endif()
 
+if(NOT VCS_TAG AND SKBUILD_PROJECT_VERSION)
+    set(VCS_TAG "v${SKBUILD_PROJECT_VERSION}")
+endif()
+
 if(VCS_TAG)
     message(STATUS "vs-nlm-ispc ${VCS_TAG}")
 else()
@@ -58,5 +69,11 @@ else()
 endif()
 
 configure_file(source/config.h.in config.h)
-
 target_include_directories(vsnlm_ispc PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+# 3. Installation into wheel structure
+install(
+    TARGETS vsnlm_ispc
+    LIBRARY DESTINATION vapoursynth/plugins
+    RUNTIME DESTINATION vapoursynth/plugins
+)

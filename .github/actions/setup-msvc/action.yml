@@ -1,0 +1,48 @@
+name: Setup MSVC
+description: Configures MSVC and Windows SDK environment variables for GitHub Actions
+
+inputs:
+  arch:
+    description: Target architecture (e.g. x64, x86, arm64)
+    required: false
+    default: x64
+
+runs:
+  using: composite
+  steps:
+    - name: Configure MSVC Environment
+      shell: pwsh
+      run: |
+        $oldEnv = @{}
+        Get-ChildItem env: | ForEach-Object { $oldEnv[$_.Name] = $_.Value }
+        $oldPaths = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        ($env:PATH -split ';') | Where-Object { $_ } | ForEach-Object { [void]$oldPaths.Add($_) }
+
+        $vswhere = Join-Path "${env:ProgramFiles(x86)}" 'Microsoft Visual Studio\Installer\vswhere.exe'
+        $vsPath = & $vswhere -latest -products * -property installationPath
+        if (-not $vsPath) {
+            throw "Visual Studio installation not found."
+        }
+
+        $devShellDll = Join-Path $vsPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll'
+        if (-not (Test-Path $devShellDll)) {
+            throw "DevShell module not found at: $devShellDll"
+        }
+
+        Import-Module $devShellDll
+        Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments "-arch=${{ inputs.arch }}"
+
+        ($env:PATH -split ';') | Where-Object { $_ -and -not $oldPaths.Contains($_) } | ForEach-Object {
+            $_ | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        }
+
+        Get-ChildItem env: | ForEach-Object {
+            if ($_.Name -ine 'PATH' -and (-not $oldEnv.ContainsKey($_.Name) -or $oldEnv[$_.Name] -ne $_.Value)) {
+                if ($_.Value -match '[\r\n]') {
+                    $eof = [System.Guid]::NewGuid().ToString('N')
+                    "$($_.Name)<<$eof`n$($_.Value)`n$eof" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                } else {
+                    "$($_.Name)=$($_.Value)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                }
+            }
+        }

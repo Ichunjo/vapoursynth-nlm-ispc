@@ -12,7 +12,7 @@ on:
         type: string
 
 env:
-  ISPC_VERSION: "1.30.0"
+  ISPC_VERSION: "1.31.0"
 
 jobs:
   build:

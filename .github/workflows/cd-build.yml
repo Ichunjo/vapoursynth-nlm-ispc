@@ -31,29 +31,15 @@ jobs:
 
       - name: Setup MSVC
         if: runner.os == 'Windows'
-        uses: ./.github/actions/setup-msvc
+        uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9 # v4.1.0
+        with:
+          arch: x64
 
       - name: Setup ISPC
         if: inputs.dist == 'wheel'
-        shell: bash
-        run: |
-          ISPC_VERSION="${{ env.ISPC_VERSION }}"
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            curl -s -o ispc.zip -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-windows.zip"
-            unzip -q ispc.zip
-          elif [ "${{ runner.os }}" = "macOS" ]; then
-            curl -s -o ispc.tar.gz -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-macOS.universal.tar.gz"
-            tar -xzf ispc.tar.gz
-          elif [ "${{ runner.os }}" = "Linux" ]; then
-            if [ "${{ runner.arch }}" = "ARM64" ]; then
-              curl -s -o ispc.tar.gz -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-linux.aarch64.tar.gz"
-            else
-              curl -s -o ispc.tar.gz -LJO "https://github.com/ispc/ispc/releases/download/v${ISPC_VERSION}/ispc-v${ISPC_VERSION}-linux.tar.gz"
-            fi
-            tar -xzf ispc.tar.gz
-          fi
-          mv ispc-*/ ispc/
-          echo "$PWD/ispc/bin" >> $GITHUB_PATH
+        uses: ispc/install-ispc-action@c8f11c79faf193f6bdbc3a5d7e968046052a435a # main
+        with:
+          version: ${{ env.ISPC_VERSION }}
 
       - name: Build ${{ inputs.dist }}
         run: uv build --${{ inputs.dist }}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "cloneSubmodules": true,
+  "extends": [
+    "config:best-practices",
+    "helpers:pinGitHubActionDigests",
+    ":automergeMinor",
+    ":automergePr",
+    ":automergeRequireAllStatusChecks",
+    ":disableDependencyDashboard",
+    ":disableRateLimiting",
+    ":semanticCommits",
+    ":semanticCommitScopeDisabled",
+    ":semanticCommitTypeAll(deps)"
+  ],
+  "packageRules": [
+    {
+      "extends": [":semanticCommitTypeAll(ci)"],
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "automerge": true,
+      "matchUpdateTypes": ["pin", "digest", "pinDigest"]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "(?:[A-Za-z0-9_]+:[ \\t]*['\"]?|default:[ \\t]*['\"]?|\\|\\|[ \\t]*['\"]?|-[ \\t]+['\"]?)(?<currentValue>v?[0-9]+(?:\\.[0-9]+)*(?:[-+][^\\s'\"]+)?)[ \\t]*['\"]?[ \\t]+#[ \\t]*renovate:[ \\t]*datasource=(?<datasource>[a-z0-9._-]+)[ \\t]+depName=(?<depName>[^\\s]+)(?:[ \\t]+versioning=(?<versioning>[^\\s]+))?(?:[ \\t]+extractVersion=(?<extractVersion>[^\\s]+))?"
+      ],
+      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.*)${{/if}}"
+    }
+  ]
+}

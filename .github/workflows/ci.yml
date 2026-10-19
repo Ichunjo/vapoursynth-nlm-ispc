@@ -47,13 +47,13 @@ jobs:
   build-macos-x64:
     uses: ./.github/workflows/cd-build.yml
     with:
-      os: macos-26-intel
+      os: macos-15-intel
       dist: wheel
 
   build-macos-arm64:
     uses: ./.github/workflows/cd-build.yml
     with:
-      os: macos-26
+      os: macos-15
       dist: wheel
 
   publish:

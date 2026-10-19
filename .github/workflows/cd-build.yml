@@ -12,7 +12,7 @@ on:
         type: string
 
 env:
-  ISPC_VERSION: "1.31.0"
+  ISPC_VERSION: "1.31.0" # renovate: datasource=github-tags depName=ispc/ispc
 
 jobs:
   build:

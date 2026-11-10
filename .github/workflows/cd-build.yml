@@ -37,7 +37,7 @@ jobs:
 
       - name: Setup ISPC
         if: inputs.dist == 'wheel'
-        uses: ispc/install-ispc-action@f6c20fc16d9167270dd2ddba8f1aebedacd8caeb # main
+        uses: ispc/install-ispc-action@e9f9f239c343bd537d7e49b9a8491dc1a6102c7c # main
         with:
           version: ${{ env.ISPC_VERSION }}
 
